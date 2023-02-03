@@ -27,21 +27,19 @@ if __name__ == "__main__":
 
         #Print 1st arrival
         if(firstArrivalDiffInMinutes != 0):
-            print(f'\033[33;1;1m\n{x[0]["direction"]}      {firstArrivalDiffInMinutes}\033[0m')
+            print(f'\033[33;1;1m\n{x[0]["direction"]}\t\t{firstArrivalDiffInMinutes}\033[0m')
         else:
             print(f'\033[33;1;5m\n{x[0]["direction"]}\033[0m')
         
         #Print 2nd arrival
         if(secondArrivalDiffInMinutes != 0):
-            print(f'\033[33;1;1m{x[1]["direction"]}         {secondArrivalDiffInMinutes}\033[0m')
+            print(f'\033[33;1;1m{x[1]["direction"]}\t\t{secondArrivalDiffInMinutes}\033[0m')
         else:
             print(f'\033[33;1;5m\n{x[0]["direction"]}\033[0m')
 
         #Print warning text
-        print(re.sub('<[^<]+?>', '', f'\n{x[0]["remarks"][2]["text"]}'))
+        # print(re.sub('<[^<]+?>', '', f'\n{x[0]["remarks"][2]["text"]}')) needs to be dynamically accessed
 
-        print(UP, end=CLEAR)
-        print(UP, end=CLEAR)
         print(UP, end=CLEAR)
         print(UP, end=CLEAR)
         print(UP, end=CLEAR)
