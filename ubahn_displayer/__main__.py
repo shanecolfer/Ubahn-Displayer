@@ -1,49 +1,52 @@
 """Entry point for ubahn_displayer."""
 
 from datetime import datetime
+import sys
 import time
 
 import dateutil.parser
-import re
 from .cli import main
 import requests
-
-import os
 
 if __name__ == "__main__":
     main()
 
-    UP = '\033[1A'
-    CLEAR = '\x1b[2K'
-
-    print(UP, end=CLEAR)
-    
     while(1):
 
-        x = requests.get("https://v5.bvg.transport.rest/stops/900000016201/departures?results=2").json()
+        response = requests.get("https://v6.bvg.transport.rest/stops/900110003/departures?results=20&suburban=true&subway=false&tram=false&bus=false&ferry=false&express=false&regional=false").json()
+        departures = response["departures"]
+        station_name = departures[0]["stop"]["name"] if departures else "S-Bahn"
 
-        firstArrivalDiffInMinutes = dateutil.parser.isoparse(x[0]["when"]).minute - datetime.now().minute
-        secondArrivalDiffInMinutes = dateutil.parser.isoparse(x[1]["when"]).minute - datetime.now().minute
+        northbound = [d for d in departures if (d.get("platform") or d.get("plannedPlatform")) == "2"][:2]
+        southbound = [d for d in departures if (d.get("platform") or d.get("plannedPlatform")) == "1"][:2]
 
-        #Print 1st arrival
-        if(firstArrivalDiffInMinutes != 0):
-            print(f'\033[33;1;1m\n{x[0]["direction"]}\t\t{firstArrivalDiffInMinutes}\033[0m')
-        else:
-            print(f'\033[33;1;5m\n{x[0]["direction"]}\033[0m')
-        
-        #Print 2nd arrival
-        if(secondArrivalDiffInMinutes != 0):
-            print(f'\033[33;1;1m{x[1]["direction"]}\t\t{secondArrivalDiffInMinutes}\033[0m')
-        else:
-            print(f'\033[33;1;5m\n{x[0]["direction"]}\033[0m')
+        out = '\033[2J\033[H'
+        out += f'\n\033[1;97m  {station_name}\033[0m\n\n'
 
-        #Print warning text
-        # print(re.sub('<[^<]+?>', '', f'\n{x[0]["remarks"][2]["text"]}')) needs to be dynamically accessed
+        for label, trains in [("North", northbound), ("South", southbound)]:
+            out += f'\033[1;37m  ── {label} ──\033[0m\n\n'
+            for departure in trains:
+                when = departure["when"] or departure["plannedWhen"]
+                diff = dateutil.parser.isoparse(when).minute - datetime.now().minute
+                line = departure["line"]["name"]
+                direction = departure["direction"]
+                delay = departure.get("delay") or 0
+                cancelled = departure.get("cancelled", False)
+                alerts = [r["text"] for r in departure.get("remarks", []) if r["type"] in ("status", "warning")]
 
-        print(UP, end=CLEAR)
-        print(UP, end=CLEAR)
-        print(UP, end=CLEAR)
-        print(UP, end=CLEAR)
+                if cancelled:
+                    out += f'\033[31;1m  {line:<5}{direction:<38}CANCELLED \033[0m\n'
+                else:
+                    time_str = f"{diff} min" if diff != 0 else ""
+                    delay_str = f'\033[31m  +{delay//60}m\033[33;1m' if delay > 0 else ""
+                    style = '\033[33;1;5m' if diff == 0 else '\033[33;1m'
+                    out += f'{style}  {line:<5}{direction:<38}{time_str:<10}{delay_str}\033[0m\n'
+
+                for alert in alerts:
+                    out += f'\033[31m    ⚠ {alert}\033[0m\n'
+                out += '\n'
+
+        sys.stdout.write(out)
+        sys.stdout.flush()
 
         time.sleep(2)
-
