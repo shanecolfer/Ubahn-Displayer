@@ -1,7 +1,7 @@
 
 # Ubahn Displayer
 
-A terminal display for live S-Bahn departures at S Greifswalder Str. (Berlin), showing northbound and southbound trains with real-time delays and disruption alerts.
+A terminal display for live public transport departures in Berlin, showing northbound and southbound trains with real-time delays and disruption alerts.
 
 ## Run with Docker
 
@@ -10,6 +10,8 @@ No setup required — just run:
 ```bash
 docker run -it shanecolfer/ubahn-displayer
 ```
+
+You'll be prompted to search for a stop by name, then select from the results. The display will show the next two departures in each direction, updating in real time.
 
 ## Run locally
 
